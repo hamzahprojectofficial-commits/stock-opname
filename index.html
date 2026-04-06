@@ -3,19 +3,45 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      width: 80%;
+      margin: 10px;
+    }
+
+    #loading {
+      display: none;
+      font-weight: bold;
+      color: blue;
+    }
+
+    img {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
 <h2>Stock Opname</h2>
 
-<input id="akses" placeholder="Kode Akses"><br><br>
+<input id="akses" placeholder="Kode Akses"><br>
 
-<div id="reader" style="width:300px"></div>
+<div id="reader" style="width:300px; margin:auto"></div>
+
+<div id="loading">🔄 Mencari data...</div>
 
 <div id="result"></div>
 <img id="gambar" width="200"/>
 
-<br><br>
+<br>
 <button onclick="kirimGForm()">Serah Terima</button>
 
 <script>
@@ -24,43 +50,72 @@ const FORM_URL = "https://forms.gle/EGZrXieBxnwFQs9L9";
 
 let lastData = null;
 
+// 🔊 SUARA
+const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
+
 function onScanSuccess(text) {
+
   let akses = document.getElementById("akses").value;
+
+  if(!akses){
+    alert("Isi kode akses dulu!");
+    return;
+  }
+
+  // tampilkan loading
+  document.getElementById("loading").style.display = "block";
 
   fetch(API_URL + "?barcode=" + text + "&akses=" + akses)
     .then(res => res.json())
     .then(data => {
 
+      // sembunyikan loading
+      document.getElementById("loading").style.display = "none";
+
       if(data.found){
+        successSound.play(); // 🔊 suara sukses
         lastData = data;
 
         document.getElementById("result").innerHTML =
-          data.nama + "<br>" + data.id;
+          "<b>" + data.nama + "</b><br>" +
+          "ID: " + data.id + "<br>" +
+          "SN: " + data.sn;
 
         document.getElementById("gambar").src = data.gambar;
+
       } else {
+        errorSound.play(); // 🔊 suara gagal
         alert("Data tidak ditemukan / akses salah");
       }
 
+    })
+    .catch(err => {
+      document.getElementById("loading").style.display = "none";
+      errorSound.play();
+      alert("Error koneksi!");
     });
 }
 
+// START SCANNER
 new Html5Qrcode("reader").start(
   { facingMode: "environment" },
   { fps: 10, qrbox: 250 },
   onScanSuccess
 );
 
+// KIRIM KE GFORM
 function kirimGForm(){
   if(!lastData){
     alert("Scan dulu!");
     return;
   }
 
-let url = FORM_URL + "?usp=pp_url"
-  + "&entry.864194165=" + lastData.id
-  + "&entry.1933308499=" + lastData.sn
-  + "&entry.1648117374=" + lastData.nama;
+  let url = FORM_URL + "?usp=pp_url"
+    + "&entry.864194165=" + lastData.id
+    + "&entry.1933308499=" + lastData.sn
+    + "&entry.1648117374=" + lastData.nama;
+
   window.open(url);
 }
 </script>
