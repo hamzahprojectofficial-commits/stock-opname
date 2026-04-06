@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h2>Stock Opname</h2>
+
+<input id="akses" placeholder="Kode Akses"><br><br>
+
+<div id="reader" style="width:300px"></div>
+
+<div id="result"></div>
+<img id="gambar" width="200"/>
+
+<br><br>
+<button onclick="kirimGForm()">Serah Terima</button>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbybgVvrJ9l8BLRSultMTsApWezZpuyYmDVYgQ_bsDc8mTTceUge9wKzWyAPHgn7ndc/exec";
+const FORM_URL = "https://forms.gle/EGZrXieBxnwFQs9L9";
+
+let lastData = null;
+
+function onScanSuccess(text) {
+  let akses = document.getElementById("akses").value;
+
+  fetch(API_URL + "?barcode=" + text + "&akses=" + akses)
+    .then(res => res.json())
+    .then(data => {
+
+      if(data.found){
+        lastData = data;
+
+        document.getElementById("result").innerHTML =
+          data.nama + "<br>" + data.id;
+
+        document.getElementById("gambar").src = data.gambar;
+      } else {
+        alert("Data tidak ditemukan / akses salah");
+      }
+
+    });
+}
+
+new Html5Qrcode("reader").start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  onScanSuccess
+);
+
+function kirimGForm(){
+  if(!lastData){
+    alert("Scan dulu!");
+    return;
+  }
+
+let url = FORM_URL + "?usp=pp_url"
+  + "&entry.864194165=" + lastData.id
+  + "&entry.1933308499=" + lastData.sn
+  + "&entry.1648117374=" + lastData.nama;
+  window.open(url);
+}
+</script>
+
+</body>
+</html>
