@@ -1,115 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/html5-qrcode"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  padding: 20px;
+}
 
-    input, button {
-      padding: 10px;
-      width: 80%;
-      margin: 10px;
-    }
+.hidden { display:none; }
 
-    #loading {
-      display: none;
-      font-weight: bold;
-      color: blue;
-    }
+input, button {
+  padding: 10px;
+  width: 80%;
+  margin: 10px;
+}
 
-    img {
-      margin-top: 10px;
-    }
-  </style>
+#loading {
+  display:none;
+  color: blue;
+  font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Stock Opname</h2>
+<!-- ================= LOGIN PAGE ================= -->
+<div id="pageLogin">
+  <h2>Kode Akses</h2>
+  <input id="akses" placeholder="Masukkan Kode Akses">
+  <br>
+  <button onclick="cekAkses()">Confirm</button>
+  <p id="loginError" style="color:red"></p>
+</div>
 
-<input id="akses" placeholder="Kode Akses"><br>
+<!-- ================= SCAN PAGE ================= -->
+<div id="pageScan" class="hidden">
+  <h2>Scan Barcode</h2>
+  <div id="reader" style="width:300px;margin:auto"></div>
+  <div id="loading">🔄 Mencari data...</div>
+</div>
 
-<div id="reader" style="width:300px; margin:auto"></div>
-
-<div id="loading">🔄 Mencari data...</div>
-
-<div id="result"></div>
-<img id="gambar" width="200"/>
-
-<br>
-<button onclick="kirimGForm()">Serah Terima</button>
+<!-- ================= DATA PAGE ================= -->
+<div id="pageData" class="hidden">
+  <h2>Detail Barang</h2>
+  <div id="result"></div>
+  <img id="gambar" width="200">
+  <br>
+  <button onclick="serahTerima()">Serah Terima</button>
+</div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbybgVvrJ9l8BLRSultMTsApWezZpuyYmDVYgQ_bsDc8mTTceUge9wKzWyAPHgn7ndc/exec";
 const FORM_URL = "https://forms.gle/EGZrXieBxnwFQs9L9";
 
+let aksesGlobal = "";
 let lastData = null;
 
 // 🔊 SUARA
 const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
 
-function onScanSuccess(text) {
-
+// ================= LOGIN =================
+function cekAkses(){
   let akses = document.getElementById("akses").value;
 
-  if(!akses){
-    alert("Isi kode akses dulu!");
-    return;
-  }
+  if(akses === "12345"){
+    aksesGlobal = akses;
 
-  // tampilkan loading
+    document.getElementById("pageLogin").classList.add("hidden");
+    document.getElementById("pageScan").classList.remove("hidden");
+
+    startScanner();
+  } else {
+    document.getElementById("loginError").innerText = "Kode akses salah";
+  }
+}
+
+// ================= SCANNER =================
+function startScanner(){
+  const html5QrCode = new Html5Qrcode("reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (barcode) => {
+      html5QrCode.stop();
+      cariData(barcode);
+    }
+  );
+}
+
+// ================= CARI DATA =================
+function cariData(barcode){
+
   document.getElementById("loading").style.display = "block";
 
-  fetch(API_URL + "?barcode=" + text + "&akses=" + akses)
+  fetch(API_URL + "?barcode=" + barcode + "&akses=" + aksesGlobal)
     .then(res => res.json())
     .then(data => {
 
-      // sembunyikan loading
       document.getElementById("loading").style.display = "none";
 
       if(data.found){
-        successSound.play(); // 🔊 suara sukses
+        successSound.play();
+
         lastData = data;
 
-        document.getElementById("result").innerHTML =
-          "<b>" + data.nama + "</b><br>" +
-          "ID: " + data.id + "<br>" +
-          "SN: " + data.sn;
-
-        document.getElementById("gambar").src = data.gambar;
+        tampilData(data);
 
       } else {
-        errorSound.play(); // 🔊 suara gagal
-        alert("Data tidak ditemukan / akses salah");
+        errorSound.play();
+        alert("Data tidak ditemukan");
+        startScanner();
       }
 
     })
-    .catch(err => {
+    .catch(() => {
       document.getElementById("loading").style.display = "none";
       errorSound.play();
-      alert("Error koneksi!");
+      alert("Error koneksi");
+      startScanner();
     });
 }
 
-// START SCANNER
-new Html5Qrcode("reader").start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
-  onScanSuccess
-);
+// ================= TAMPIL DATA =================
+function tampilData(data){
 
-// KIRIM KE GFORM
-function kirimGForm(){
-  if(!lastData){
-    alert("Scan dulu!");
-    return;
-  }
+  document.getElementById("pageScan").classList.add("hidden");
+  document.getElementById("pageData").classList.remove("hidden");
+
+  document.getElementById("result").innerHTML =
+    "<b>" + data.nama + "</b><br>" +
+    "ID: " + data.id + "<br>" +
+    "SN: " + data.sn;
+
+  document.getElementById("gambar").src = data.gambar;
+}
+
+// ================= SERAH TERIMA =================
+function serahTerima(){
 
   let url = FORM_URL + "?usp=pp_url"
     + "&entry.864194165=" + lastData.id
@@ -118,6 +152,7 @@ function kirimGForm(){
 
   window.open(url);
 }
+
 </script>
 
 </body>
