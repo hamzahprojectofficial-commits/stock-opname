@@ -66,29 +66,19 @@ let html5QrCode;
 const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
 
-// ================= AUTO FIX GOOGLE DRIVE LINK =================
-function fixImageUrl(url){
+// ================= FIX GAMBAR (ANTI GAGAL) =================
+function forceImage(url){
   if(!url) return "";
 
-  // format /file/d/
+  let id = "";
+
   if(url.includes("/file/d/")){
-    let id = url.split("/file/d/")[1].split("/")[0];
-    return "https://drive.google.com/uc?export=view&id=" + id;
+    id = url.split("/file/d/")[1].split("/")[0];
+  } else if(url.includes("id=")){
+    id = url.split("id=")[1];
   }
 
-  // format open?id=
-  if(url.includes("open?id=")){
-    let id = url.split("open?id=")[1];
-    return "https://drive.google.com/uc?export=view&id=" + id;
-  }
-
-  // format uc?id=
-  if(url.includes("uc?id=")){
-    let id = url.split("uc?id=")[1];
-    return "https://drive.google.com/uc?export=view&id=" + id;
-  }
-
-  return url;
+  return "https://images.weserv.nl/?url=drive.google.com/uc?id=" + id;
 }
 
 // ================= LOGIN =================
@@ -165,8 +155,8 @@ function tampilData(data){
     "ID: " + data.id + "<br>" +
     "SN: " + data.sn;
 
-  // 🔥 AUTO FIX IMAGE
-  document.getElementById("gambar").src = fixImageUrl(data.gambar);
+  // 🔥 FIX GAMBAR DI SINI
+  document.getElementById("gambar").src = forceImage(data.gambar);
 }
 
 // ================= SCAN ULANG =================
