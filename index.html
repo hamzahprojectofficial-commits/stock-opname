@@ -11,8 +11,6 @@ body {
   padding: 20px;
 }
 
-.hidden { display:none; }
-
 input, button {
   padding: 10px;
   width: 80%;
@@ -29,7 +27,7 @@ input, button {
 
 <body>
 
-<!-- ================= LOGIN PAGE ================= -->
+<!-- LOGIN -->
 <div id="pageLogin">
   <h2>Kode Akses</h2>
   <input id="akses" placeholder="Masukkan Kode Akses">
@@ -38,20 +36,22 @@ input, button {
   <p id="loginError" style="color:red"></p>
 </div>
 
-<!-- ================= SCAN PAGE ================= -->
-<div id="pageScan" class="hidden">
+<!-- SCAN -->
+<div id="pageScan" style="display:none;">
   <h2>Scan Barcode</h2>
   <div id="reader" style="width:300px;margin:auto"></div>
   <div id="loading">🔄 Mencari data...</div>
 </div>
 
-<!-- ================= DATA PAGE ================= -->
-<div id="pageData" class="hidden">
+<!-- DATA -->
+<div id="pageData" style="display:none;">
   <h2>Detail Barang</h2>
   <div id="result"></div>
   <img id="gambar" width="200">
   <br>
   <button onclick="serahTerima()">Serah Terima</button>
+  <br>
+  <button onclick="scanUlang()">Scan Lagi</button>
 </div>
 
 <script>
@@ -60,6 +60,7 @@ const FORM_URL = "https://forms.gle/EGZrXieBxnwFQs9L9";
 
 let aksesGlobal = "";
 let lastData = null;
+let html5QrCode;
 
 // 🔊 SUARA
 const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
@@ -72,8 +73,8 @@ function cekAkses(){
   if(akses === "12345"){
     aksesGlobal = akses;
 
-    document.getElementById("pageLogin").classList.add("hidden");
-    document.getElementById("pageScan").classList.remove("hidden");
+    document.getElementById("pageLogin").style.display = "none";
+    document.getElementById("pageScan").style.display = "block";
 
     startScanner();
   } else {
@@ -81,9 +82,9 @@ function cekAkses(){
   }
 }
 
-// ================= SCANNER =================
+// ================= START SCANNER =================
 function startScanner(){
-  const html5QrCode = new Html5Qrcode("reader");
+  html5QrCode = new Html5Qrcode("reader");
 
   html5QrCode.start(
     { facingMode: "environment" },
@@ -131,8 +132,8 @@ function cariData(barcode){
 // ================= TAMPIL DATA =================
 function tampilData(data){
 
-  document.getElementById("pageScan").classList.add("hidden");
-  document.getElementById("pageData").classList.remove("hidden");
+  document.getElementById("pageScan").style.display = "none";
+  document.getElementById("pageData").style.display = "block";
 
   document.getElementById("result").innerHTML =
     "<b>" + data.nama + "</b><br>" +
@@ -142,8 +143,20 @@ function tampilData(data){
   document.getElementById("gambar").src = data.gambar;
 }
 
+// ================= SCAN ULANG =================
+function scanUlang(){
+  document.getElementById("pageData").style.display = "none";
+  document.getElementById("pageScan").style.display = "block";
+  startScanner();
+}
+
 // ================= SERAH TERIMA =================
 function serahTerima(){
+
+  if(!lastData){
+    alert("Scan dulu!");
+    return;
+  }
 
   let url = FORM_URL + "?usp=pp_url"
     + "&entry.864194165=" + lastData.id
