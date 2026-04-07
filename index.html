@@ -12,22 +12,35 @@ body {
 }
 
 input, button {
-  padding: 10px;
-  width: 80%;
+  padding: 12px;
+  width: 85%;
   margin: 10px;
+  font-size: 16px;
+}
+
+button {
+  background: #2d89ef;
+  color: white;
+  border: none;
+  border-radius: 5px;
 }
 
 #loading {
   display:none;
-  color: blue;
   font-weight: bold;
+  color: blue;
+}
+
+img {
+  margin-top: 10px;
+  border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <div id="pageLogin">
   <h2>Kode Akses</h2>
   <input id="akses" placeholder="Masukkan Kode Akses">
@@ -36,21 +49,20 @@ input, button {
   <p id="loginError" style="color:red"></p>
 </div>
 
-<!-- SCAN -->
+<!-- ================= SCAN ================= -->
 <div id="pageScan" style="display:none;">
   <h2>Scan Barcode</h2>
   <div id="reader" style="width:300px;margin:auto"></div>
   <div id="loading">🔄 Mencari data...</div>
 </div>
 
-<!-- DATA -->
+<!-- ================= DATA ================= -->
 <div id="pageData" style="display:none;">
   <h2>Detail Barang</h2>
   <div id="result"></div>
-  <img id="gambar" width="200">
-  <br>
+  <img id="gambar" width="220">
+  <br><br>
   <button onclick="serahTerima()">Serah Terima</button>
-  <br>
   <button onclick="scanUlang()">Scan Lagi</button>
 </div>
 
@@ -62,23 +74,41 @@ let aksesGlobal = "";
 let lastData = null;
 let html5QrCode;
 
-// 🔊 SUARA
+// 🔊 SOUND
 const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
 
-// ================= FIX GAMBAR (ANTI GAGAL) =================
-function forceImage(url){
-  if(!url) return "";
+// ================= FIX GAMBAR SUPER AMAN =================
+function setImage(url){
+  if(!url){
+    document.getElementById("gambar").src = "";
+    return;
+  }
 
   let id = "";
 
-  if(url.includes("/file/d/")){
-    id = url.split("/file/d/")[1].split("/")[0];
-  } else if(url.includes("id=")){
-    id = url.split("id=")[1];
+  try{
+    if(url.includes("/file/d/")){
+      id = url.split("/file/d/")[1].split("/")[0];
+    } else if(url.includes("id=")){
+      id = url.split("id=")[1];
+    } else {
+      id = url; // fallback kalau sudah ID langsung
+    }
+  } catch(e){
+    console.log("Error parsing ID");
   }
 
-  return "https://images.weserv.nl/?url=drive.google.com/uc?id=" + id;
+  let img1 = "https://images.weserv.nl/?url=drive.google.com/uc?id=" + id;
+  let img2 = "https://drive.google.com/thumbnail?id=" + id;
+
+  let img = document.getElementById("gambar");
+
+  img.src = img1;
+
+  img.onerror = function(){
+    img.src = img2;
+  };
 }
 
 // ================= LOGIN =================
@@ -156,7 +186,7 @@ function tampilData(data){
     "SN: " + data.sn;
 
   // 🔥 FIX GAMBAR DI SINI
-  document.getElementById("gambar").src = forceImage(data.gambar);
+  setImage(data.gambar);
 }
 
 // ================= SCAN ULANG =================
