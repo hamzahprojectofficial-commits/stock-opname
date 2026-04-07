@@ -40,7 +40,7 @@ img {
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <div id="pageLogin">
   <h2>Kode Akses</h2>
   <input id="akses" placeholder="Masukkan Kode Akses">
@@ -49,14 +49,14 @@ img {
   <p id="loginError" style="color:red"></p>
 </div>
 
-<!-- ================= SCAN ================= -->
+<!-- SCAN -->
 <div id="pageScan" style="display:none;">
   <h2>Scan Barcode</h2>
   <div id="reader" style="width:300px;margin:auto"></div>
   <div id="loading">🔄 Mencari data...</div>
 </div>
 
-<!-- ================= DATA ================= -->
+<!-- DATA -->
 <div id="pageData" style="display:none;">
   <h2>Detail Barang</h2>
   <div id="result"></div>
@@ -68,17 +68,19 @@ img {
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbybgVvrJ9l8BLRSultMTsApWezZpuyYmDVYgQ_bsDc8mTTceUge9wKzWyAPHgn7ndc/exec";
-const FORM_URL = "https://docs.google.com/forms/d/1PWeUxCwVkrL17fLesRwUIgykg9RRqDClPX7UqJfJuIY/prefill";
+
+// ✅ FORM BASE (WAJIB viewform TANPA PARAMETER)
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfNsy6SRuERDxmMTjsyAjI8ouKnoHRCIgyaqbq2rj64PF6OdQ/viewform";
 
 let aksesGlobal = "";
 let lastData = null;
 let html5QrCode;
 
-// 🔊 SOUND
+// SOUND
 const successSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
 
-// ================= FIX GAMBAR SUPER AMAN =================
+// FIX GAMBAR
 function setImage(url){
   if(!url){
     document.getElementById("gambar").src = "";
@@ -93,11 +95,9 @@ function setImage(url){
     } else if(url.includes("id=")){
       id = url.split("id=")[1];
     } else {
-      id = url; // fallback kalau sudah ID langsung
+      id = url;
     }
-  } catch(e){
-    console.log("Error parsing ID");
-  }
+  } catch(e){}
 
   let img1 = "https://images.weserv.nl/?url=drive.google.com/uc?id=" + id;
   let img2 = "https://drive.google.com/thumbnail?id=" + id;
@@ -111,7 +111,7 @@ function setImage(url){
   };
 }
 
-// ================= LOGIN =================
+// LOGIN
 function cekAkses(){
   let akses = document.getElementById("akses").value;
 
@@ -127,7 +127,7 @@ function cekAkses(){
   }
 }
 
-// ================= START SCANNER =================
+// START SCANNER
 function startScanner(){
   html5QrCode = new Html5Qrcode("reader");
 
@@ -141,7 +141,7 @@ function startScanner(){
   );
 }
 
-// ================= CARI DATA =================
+// CARI DATA
 function cariData(barcode){
 
   document.getElementById("loading").style.display = "block";
@@ -174,7 +174,7 @@ function cariData(barcode){
     });
 }
 
-// ================= TAMPIL DATA =================
+// TAMPIL DATA
 function tampilData(data){
 
   document.getElementById("pageScan").style.display = "none";
@@ -185,18 +185,17 @@ function tampilData(data){
     "ID: " + data.id + "<br>" +
     "SN: " + data.sn;
 
-  // 🔥 FIX GAMBAR DI SINI
   setImage(data.gambar);
 }
 
-// ================= SCAN ULANG =================
+// SCAN ULANG
 function scanUlang(){
   document.getElementById("pageData").style.display = "none";
   document.getElementById("pageScan").style.display = "block";
   startScanner();
 }
 
-// ================= SERAH TERIMA =================
+// ✅ SERAH TERIMA (AUTO ISI FIX)
 function serahTerima(){
 
   if(!lastData){
@@ -205,11 +204,11 @@ function serahTerima(){
   }
 
   let url = FORM_URL + "?usp=pp_url"
-    + "&entry.864194165=" + lastData.id
-    + "&entry.1933308499=" + lastData.sn
-    + "&entry.1648117374=" + lastData.nama;
+    + "&entry.864194165=" + encodeURIComponent(lastData.id)
+    + "&entry.1933308499=" + encodeURIComponent(lastData.sn)
+    + "&entry.1648117374=" + encodeURIComponent(lastData.nama);
 
-  window.open(url);
+  window.open(url, "_blank");
 }
 
 </script>
