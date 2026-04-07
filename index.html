@@ -69,7 +69,6 @@ img {
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbybgVvrJ9l8BLRSultMTsApWezZpuyYmDVYgQ_bsDc8mTTceUge9wKzWyAPHgn7ndc/exec";
 
-// ✅ FORM BASE (WAJIB viewform TANPA PARAMETER)
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfNsy6SRuERDxmMTjsyAjI8ouKnoHRCIgyaqbq2rj64PF6OdQ/viewform";
 
 let aksesGlobal = "";
@@ -82,22 +81,17 @@ const errorSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.
 
 // FIX GAMBAR
 function setImage(url){
-  if(!url){
-    document.getElementById("gambar").src = "";
-    return;
-  }
+  if(!url) return;
 
   let id = "";
 
-  try{
-    if(url.includes("/file/d/")){
-      id = url.split("/file/d/")[1].split("/")[0];
-    } else if(url.includes("id=")){
-      id = url.split("id=")[1];
-    } else {
-      id = url;
-    }
-  } catch(e){}
+  if(url.includes("/file/d/")){
+    id = url.split("/file/d/")[1].split("/")[0];
+  } else if(url.includes("id=")){
+    id = url.split("id=")[1];
+  } else {
+    id = url;
+  }
 
   let img1 = "https://images.weserv.nl/?url=drive.google.com/uc?id=" + id;
   let img2 = "https://drive.google.com/thumbnail?id=" + id;
@@ -105,7 +99,6 @@ function setImage(url){
   let img = document.getElementById("gambar");
 
   img.src = img1;
-
   img.onerror = function(){
     img.src = img2;
   };
@@ -161,7 +154,7 @@ function cariData(barcode){
 
       } else {
         errorSound.play();
-        alert("Data tidak ditemukan");
+        alert(data.error || "Data tidak ditemukan");
         startScanner();
       }
 
@@ -195,7 +188,7 @@ function scanUlang(){
   startScanner();
 }
 
-// ✅ SERAH TERIMA (AUTO ISI FIX)
+// SERAH TERIMA (AUTO ISI GFORM)
 function serahTerima(){
 
   if(!lastData){
